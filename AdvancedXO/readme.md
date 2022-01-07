@@ -4,4 +4,4 @@ By defaut the game only trains for 1 million games. Which took around 15-20mins 
 
 The output file is around 600MBs for 1 million games. This only and roughly captures around 2% of all possible moves.
 
-Please check my personal website here: manimarashi.com
+Please check my personal website here: http://manimarashi.com
