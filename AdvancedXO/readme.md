@@ -6,6 +6,4 @@ The output file is around 600MBs for 1 million games. This only and roughly capt
 
 Please check my personal website here: http://manimarashi.com
 
-https://user-images.githubusercontent.com/23125657/148609763-a902511d-6828-4a10-8d9b-e793b77f749f.mp4
-
-
+![AdvancedXOGame](https://user-images.githubusercontent.com/23125657/148609935-35ce756c-3e27-4e1d-8479-c2b6415ae6bb.gif)
