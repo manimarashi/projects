@@ -10,7 +10,10 @@ RANKS = {'a':0,'b':1,'c':2,'d':3,'e':4,'f':5,'g':6,'h':7}
 
 
 #FEN Notation: https://en.wikipedia.org/wiki/Forsyth%E2%80%93Edwards_Notation
-starting_board = 'r2q1rk1/pp2ppbp/5np1/1Ppp2B1/3PP1b1/Q1P2N2/P4PPP/3RKB1R b K c6 0 13'#'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
+starting_board = 'r3k2r/pbp1q1pp/1pn1p1bn/3p1p2/3P1P2/1PN1PN2/PQPBB1PP/R3K2R w KQkq - 0 1'
+# Standard Game: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
+# Random Board: 'r2q1rk1/pp2ppbp/5np1/1Ppp2B1/3PP1b1/Q1P2N2/P4PPP/3RKB1R b K c6 0 13'
+# Castling Test: 'r3k2r/pbp1q1pp/1pn1p1bn/3p1p2/3P1P2/1PN1PN2/PQPBB1PP/R3K2R w KQkq - 0 1'
 
 def setup_board(fen_string):
     """
@@ -139,7 +142,16 @@ def get_possible_moves(position,board,en_passant=None,possible_castles=None):
             elif (x + i[0] >= 0 and x + i[0] <= 7 and y + i[1] >= 0 and y + i[1] <= 7) and (board[position].isupper() != board[(y + i[1])*8 + x + i[0]].isupper()):
                 possible_moves.append((y + i[1])*8 + x+i[0])   
                 controlled_squares.append((y + i[1])*8 + x+i[0])
-
+        #castling the king
+        if possible_castles and possible_castles != '-':
+            if possible_castles.find('K') >= 0 and board[position]=='K' and board[61]==None and board[62]==None and set({60,61,62}).isdisjoint(controlled_area(board,'b')):
+                possible_moves.append(62)
+            if possible_castles.find('Q') >= 0 and board[position]=='K' and board[59]==None and board[58]==None and set({58,59,60}).isdisjoint(controlled_area(board,'b')):
+                possible_moves.append(58)
+            if possible_castles.find('k') >= 0 and board[position]=='k' and board[5]==None and board[6]==None and set({4,5,6}).isdisjoint(controlled_area(board,'w')):
+                possible_moves.append(6)                
+            if possible_castles.find('q') >= 0 and board[position]=='k' and board[3]==None and board[2]==None and set({4,3,2}).isdisjoint(controlled_area(board,'w')):
+                possible_moves.append(2)                     
     return(possible_moves,controlled_squares)
 
 
@@ -233,8 +245,7 @@ def main():
                 pygame.display.update(screen.blit(textsurface2,(700,440))) #draw white to fill the last text with white
                 
                 mouse_pos = mouse_pos_to_square(pygame.mouse.get_pos())
-                print(mouse_pos)
-                possible_moves = get_possible_moves(mouse_pos,current_board,en_passant=current_enpassant)[0]
+                possible_moves = get_possible_moves(mouse_pos,current_board,en_passant=current_enpassant,possible_castles=current_castle)[0]
 
                 draw_chess_board_on_screen(screen,WHITE,LIGHT,DARK,possible_moves) #Draw the board
                 pygame.display.update(all_sprites_list.draw(screen)) #draw all the pieces
