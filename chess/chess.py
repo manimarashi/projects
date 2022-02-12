@@ -60,8 +60,8 @@ def controlled_area(board,color):
 def get_possible_moves(position,board,en_passant=None,possible_castles=None):
     """ Gets a list of all possible moves for the current selected piece """
     
-    if position == None:
-        return([])
+    if position == None or position == []:
+        return([],[])
     
     possible_moves = []
     controlled_squares = [] #used to determine checked status. since pawn's control square is not the same as their possible move list 
@@ -176,6 +176,8 @@ def mouse_pos_to_square(mp):
     x , y = mp
     if x >= 100 and x <= 100 + SQW*8 and y >= 100 and y <= 100 + SQW*8:
         return ((y-100) // SQW * 8 + (x-100) // SQW)
+    else:
+        return([])
 
     
 def draw_chess_board_on_screen(game_screen,bg_color,white_square_color,dark_square_color,possible_moves_list):
@@ -231,6 +233,7 @@ def main():
                 pygame.display.update(screen.blit(textsurface2,(700,440))) #draw white to fill the last text with white
                 
                 mouse_pos = mouse_pos_to_square(pygame.mouse.get_pos())
+                print(mouse_pos)
                 possible_moves = get_possible_moves(mouse_pos,current_board,en_passant=current_enpassant)[0]
 
                 draw_chess_board_on_screen(screen,WHITE,LIGHT,DARK,possible_moves) #Draw the board
