@@ -203,7 +203,78 @@ def draw_chess_board_on_screen(game_screen,bg_color,white_square_color,dark_squa
             elif (i+j) % 2 == 0:
                 pygame.draw.rect(game_screen,white_square_color,(100+SQW*i,100+SQW*j,SQW,SQW))
 
+def move_piece(board,from_position,to_position):
+    enpassantposition = []
+    #moving pawns
+    if board[from_position] in ['p','P']:
+        #if a pawn jumps two pieces
+        if abs(from_position-to_position)==16:
+            if from_position>to_position: #if it is white pawn that is jumping two pieces
+                enpassantposition = from_position - 8
+            else: #white pawn that is jumping two pieces
+                enpassantposition = from_position + 8
+            
+            board[to_position] = board[from_position]
+            board[from_position] = None
+        #promotion of a pawn to queen! for now only promotes to queen!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        elif to_position <= 7: #if a white pawn gets to the 8th rank
+            board[to_position] = 'Q'
+            board[from_position] = None
+        elif to_position >= 56: #if a black pawn gets to the 1st rank
+            board[to_position] = 'q'
+            board[from_position] = None        
+    #handling king moves and castles
+    elif board[from_position] in ['k','K']:
+        #both castle options are exhausted at this point since king is moving
+        if board[from_position] == 'K':
+            castlesused = 'KQ'
+        else:
+            castlesused = 'kq'
+    
+        if from_position == 60 and to_position == 62: #white king castles king side
+            board[62] = 'K'
+            board[60] = None
+            board[61] = 'R'
+            board[63] = None
+        elif from_position == 60 and to_position == 58: #white king castles queen side
+            board[58] = 'K'
+            board[60] = None
+            board[59] = 'R'
+            board[56] = None
+        elif from_position == 4 and to_position == 6: #black king castles king side
+            board[6] = 'k'
+            board[4] = None
+            board[5] = 'r'
+            board[7] = None
+        elif from_position == 4 and to_position == 2: #white king castles queen side
+            board[2] = 'k'
+            board[4] = None
+            board[3] = 'R'
+            board[0] = None
+        else: #indicating any king moves
+            board[to_position] = board[from_position]
+            board[from_position] = None
+    #handling rook moves since it affects castles
+    elif board[from_position] in ['r','R']:
+        if board[from_position] == 'R' and from_position == 63:
+            castlesused = 'K'
+        elif board[from_position] == 'R' and from_position == 56:
+            castlesused = 'Q'        
+        elif board[from_position] == 'r' and from_position == 7:
+            castlesused = 'k'
+        elif board[from_position] == 'r' and from_position == 0:
+            castlesused = 'q'
         
+        board[to_position] = board[from_position]
+        board[from_position] = None
+    #all the other moves
+    else:
+        board[to_position] = board[from_position]
+        board[from_position] = None
+        
+
+    return(board,enpassantposition,castlesused)
+
 def main():
     WHITE = (255,255,255)
     BLACK = (0,0,0)
@@ -231,9 +302,7 @@ def main():
     
     while Rematch:
         pygame.display.flip()
-
-
-        
+   
 
         for event in pygame.event.get():
             if (event.type == pygame.QUIT) | (pygame.key.get_pressed()[K_ESCAPE]):
