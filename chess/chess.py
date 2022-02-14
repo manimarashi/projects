@@ -204,7 +204,8 @@ def draw_chess_board_on_screen(game_screen,bg_color,white_square_color,dark_squa
                 pygame.draw.rect(game_screen,white_square_color,(100+SQW*i,100+SQW*j,SQW,SQW))
 
 def move_piece(board,from_position,to_position):
-    enpassantposition = []
+    enpassantposition = [] #gets populated when a pawn jumps two squares
+    spirit_updates = {}
     #moving pawns
     if board[from_position] in ['p','P']:
         #if a pawn jumps two pieces
@@ -216,13 +217,30 @@ def move_piece(board,from_position,to_position):
             
             board[to_position] = board[from_position]
             board[from_position] = None
+            
         #promotion of a pawn to queen! for now only promotes to queen!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         elif to_position <= 7: #if a white pawn gets to the 8th rank
             board[to_position] = 'Q'
             board[from_position] = None
         elif to_position >= 56: #if a black pawn gets to the 1st rank
             board[to_position] = 'q'
-            board[from_position] = None        
+            board[from_position] = None
+        elif abs(to_position - from_position) in [7,9]: #pawn taking another piece either directly or by en passant
+            if board[to_position] != None:
+                board[to_position] = board[from_position]
+                board[from_position] = None
+            else: # en passant
+                if board[to_position] - board[from_position] in [-7,9]:
+                    board[from_position + 1] = None
+                elif board[to_position] - board[from_position] in [-9,7]:
+                    board[from_position - 1] = None
+                
+                board[to_position] = board[from_position]
+                board[from_position] = None
+        else: # regular pawn poves
+            board[to_position] = board[from_position]
+            board[from_position] = None           
+                    
     #handling king moves and castles
     elif board[from_position] in ['k','K']:
         #both castle options are exhausted at this point since king is moving
