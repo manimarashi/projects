@@ -12,7 +12,7 @@ SCORES = {'K':40000,'k':-40000,'Q':900,'q':-900,'R':500,'r':-500,'B':300,'b':-30
 starting_board = 'r3k2r/pbp1q1pp/1pn1pb1n/3p1p2/3P1P2/1PN1PN2/PQPBB1PP/R3K2R w KQkq - 0 1'
 # Standard Game: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
 # Random Board: 'r2q1rk1/pp2ppbp/5np1/1Ppp2B1/3PP1b1/Q1P2N2/P4PPP/3RKB1R b K c6 0 13'
-# Castling Test: 'r3k2r/pbp1q1pp/1pn1p1bn/3p1p2/3P1P2/1PN1PN2/PQPBB1PP/R3K2R w KQkq - 0 1'
+# Castling Test: 'r3k2r/pbp1q1pp/1pn1pb1n/3p1p2/3P1P2/1PN1PN2/PQPBB1PP/R3K2R w KQkq - 0 1'
 
 #Sounds
 pygame.mixer.init()
@@ -392,7 +392,9 @@ def update_spirits(Spirit_group,spirit_update_dict):
                 
     return(Spirit_group)
 
-
+def evaluate_board(baord_str):
+    value = sum(list(map(SCORES.get, baord_str)))
+    return(value)
 
 def main():
     
