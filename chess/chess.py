@@ -206,6 +206,7 @@ def draw_chess_board_on_screen(game_screen,bg_color,white_square_color,dark_squa
 def move_piece(board,from_position,to_position):
     enpassantposition = [] #gets populated when a pawn jumps two squares
     spirit_updates = {}
+    castlesused = ''
     #moving pawns
     if board[from_position] in ['p','P']:
         #if a pawn jumps two pieces
@@ -215,29 +216,38 @@ def move_piece(board,from_position,to_position):
             else: #white pawn that is jumping two pieces
                 enpassantposition = from_position + 8
             
+            spirit_updates = {from_position:{to_position:board[from_position]}} #captures updates that needs to happen for spirits
+            
             board[to_position] = board[from_position]
             board[from_position] = None
             
         #promotion of a pawn to queen! for now only promotes to queen!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         elif to_position <= 7: #if a white pawn gets to the 8th rank
+            spirit_updates = {from_position:{to_position:'Q'}} #captures updates that needs to happen for spirits
             board[to_position] = 'Q'
             board[from_position] = None
+
         elif to_position >= 56: #if a black pawn gets to the 1st rank
+            spirit_updates = {from_position:{to_position:'q'}} #captures updates that needs to happen for spirits
             board[to_position] = 'q'
             board[from_position] = None
         elif abs(to_position - from_position) in [7,9]: #pawn taking another piece either directly or by en passant
             if board[to_position] != None:
+                spirit_updates = {from_position:{to_position:board[from_position]},to_position:None} #captures updates that needs to happen for spirits
                 board[to_position] = board[from_position]
                 board[from_position] = None
             else: # en passant
                 if board[to_position] - board[from_position] in [-7,9]:
+                    spirit_updates = {from_position:{to_position:board[from_position]},board[from_position + 1]: None} #captures updates that needs to happen for spirits
                     board[from_position + 1] = None
                 elif board[to_position] - board[from_position] in [-9,7]:
+                    spirit_updates = {from_position:{to_position:board[from_position]},board[from_position - 1]: None} #captures updates that needs to happen for spirits
                     board[from_position - 1] = None
                 
                 board[to_position] = board[from_position]
                 board[from_position] = None
         else: # regular pawn poves
+            spirit_updates = {from_position:{to_position:board[from_position]}}
             board[to_position] = board[from_position]
             board[from_position] = None           
                     
@@ -250,26 +260,31 @@ def move_piece(board,from_position,to_position):
             castlesused = 'kq'
     
         if from_position == 60 and to_position == 62: #white king castles king side
+            spirit_updates = {60:{62:'K'},63:{61,'R'}}
             board[62] = 'K'
             board[60] = None
             board[61] = 'R'
             board[63] = None
         elif from_position == 60 and to_position == 58: #white king castles queen side
+            spirit_updates = {60:{58:'K'},56:{59,'R'}}
             board[58] = 'K'
             board[60] = None
             board[59] = 'R'
             board[56] = None
         elif from_position == 4 and to_position == 6: #black king castles king side
+            spirit_updates = {4:{6:'k'},7:{5,'r'}}
             board[6] = 'k'
             board[4] = None
             board[5] = 'r'
             board[7] = None
         elif from_position == 4 and to_position == 2: #white king castles queen side
+            spirit_updates = {4:{2:'k'},0:{3,'r'}}
             board[2] = 'k'
             board[4] = None
             board[3] = 'R'
             board[0] = None
         else: #indicating any king moves
+            spirit_updates = {from_position:{to_position:board[from_position]}}
             board[to_position] = board[from_position]
             board[from_position] = None
     #handling rook moves since it affects castles
@@ -283,15 +298,17 @@ def move_piece(board,from_position,to_position):
         elif board[from_position] == 'r' and from_position == 0:
             castlesused = 'q'
         
+        spirit_updates = {from_position:{to_position:board[from_position]}}
         board[to_position] = board[from_position]
         board[from_position] = None
     #all the other moves
     else:
+        spirit_updates = {from_position:{to_position:board[from_position]}}
         board[to_position] = board[from_position]
         board[from_position] = None
         
 
-    return(board,enpassantposition,castlesused)
+    return(board,enpassantposition,castlesused,spirit_updates)
 
 def main():
     WHITE = (255,255,255)
