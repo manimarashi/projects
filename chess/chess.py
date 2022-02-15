@@ -310,6 +310,25 @@ def move_piece(board,from_position,to_position):
 
     return(board,enpassantposition,castlesused,spirit_updates)
 
+
+
+def update_spirits(Spirit_group,spirit_update_dict):
+    for from_,to_ in spirit_update_dict.items():
+        for spirit in Spirit_group:
+            if spirit.position == from_:
+                if to_ == None:
+                    Spirit_group.remove(spirit)
+                else:
+                    to_position = list(to_.keys())[0]
+                    spirit.position = to_position
+                    spirit.piecetype = to_[to_position] #getting the piece type str from the spirit_update_dict
+                
+                break #no need to go through all other items once a match has been found.
+                
+    return(Spirit_group)
+
+
+
 def main():
     WHITE = (255,255,255)
     BLACK = (0,0,0)
