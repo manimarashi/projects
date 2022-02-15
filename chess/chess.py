@@ -180,6 +180,22 @@ class Piece(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.x = 100 + (position % 8) * SQW
         self.rect.y = 100 + (position // 8) * SQW
+    def update(self,piecetype,position):
+        """ updatin piece location and type, basically same as the init method"""
+        self.piecetype = piecetype
+        self.position = position
+        self.rect = self.image.get_rect()
+        self.rect.x = 100 + (position % 8) * SQW
+        self.rect.y = 100 + (position // 8) * SQW
+    def taken(self):
+        self.position = 99
+        self.rect = self.image.get_rect()
+        if self.piecetype.isupper() == True:
+            self.rect.x = 750
+            self.rect.y = 600
+        else:
+            self.rect.x = 750
+            self.rect.y = 100
 
 def mouse_pos_to_square(mp):
     """
@@ -233,15 +249,15 @@ def move_piece(board,from_position,to_position):
             board[from_position] = None
         elif abs(to_position - from_position) in [7,9]: #pawn taking another piece either directly or by en passant
             if board[to_position] != None:
-                spirit_updates = {from_position:{to_position:board[from_position]},to_position:None} #captures updates that needs to happen for spirits
+                spirit_updates = {to_position:None,from_position:{to_position:board[from_position]}} #captures updates that needs to happen for spirits
                 board[to_position] = board[from_position]
                 board[from_position] = None
             else: # en passant
-                if board[to_position] - board[from_position] in [-7,9]:
-                    spirit_updates = {from_position:{to_position:board[from_position]},board[from_position + 1]: None} #captures updates that needs to happen for spirits
+                if to_position - from_position in [-7,9]:
+                    spirit_updates = {from_position + 1: None,from_position:{to_position:board[from_position]}} #captures updates that needs to happen for spirits
                     board[from_position + 1] = None
-                elif board[to_position] - board[from_position] in [-9,7]:
-                    spirit_updates = {from_position:{to_position:board[from_position]},board[from_position - 1]: None} #captures updates that needs to happen for spirits
+                elif to_position - from_position in [-9,7]:
+                    spirit_updates = {from_position - 1: None,from_position:{to_position:board[from_position]}} #captures updates that needs to happen for spirits
                     board[from_position - 1] = None
                 
                 board[to_position] = board[from_position]
@@ -260,30 +276,34 @@ def move_piece(board,from_position,to_position):
             castlesused = 'kq'
     
         if from_position == 60 and to_position == 62: #white king castles king side
-            spirit_updates = {60:{62:'K'},63:{61,'R'}}
+            spirit_updates = {60:{62:'K'},63:{61:'R'}}
             board[62] = 'K'
             board[60] = None
             board[61] = 'R'
             board[63] = None
         elif from_position == 60 and to_position == 58: #white king castles queen side
-            spirit_updates = {60:{58:'K'},56:{59,'R'}}
+            spirit_updates = {60:{58:'K'},56:{59:'R'}}
             board[58] = 'K'
             board[60] = None
             board[59] = 'R'
             board[56] = None
         elif from_position == 4 and to_position == 6: #black king castles king side
-            spirit_updates = {4:{6:'k'},7:{5,'r'}}
+            spirit_updates = {4:{6:'k'},7:{5:'r'}}
             board[6] = 'k'
             board[4] = None
             board[5] = 'r'
             board[7] = None
         elif from_position == 4 and to_position == 2: #white king castles queen side
-            spirit_updates = {4:{2:'k'},0:{3,'r'}}
+            spirit_updates = {4:{2:'k'},0:{3:'r'}}
             board[2] = 'k'
             board[4] = None
             board[3] = 'R'
             board[0] = None
-        else: #indicating any king moves
+        elif board[to_position] != None: #indicating any king moves that takes a piece
+            spirit_updates = {to_position: None,from_position:{to_position:board[from_position]}}
+            board[to_position] = board[from_position]
+            board[from_position] = None            
+        else:
             spirit_updates = {from_position:{to_position:board[from_position]}}
             board[to_position] = board[from_position]
             board[from_position] = None
@@ -298,15 +318,24 @@ def move_piece(board,from_position,to_position):
         elif board[from_position] == 'r' and from_position == 0:
             castlesused = 'q'
         
-        spirit_updates = {from_position:{to_position:board[from_position]}}
+        if board[to_position] != None: #rook takes a piece
+            spirit_updates = {to_position: None,from_position:{to_position:board[from_position]}}
+            board[to_position] = board[from_position]
+            board[from_position] = None
+        else: #regular rook move
+            spirit_updates = {from_position:{to_position:board[from_position]}}
+            board[to_position] = board[from_position]
+            board[from_position] = None            
+    #taking a piece
+    elif board[to_position] != None:
+        spirit_updates = {to_position: None,from_position:{to_position:board[from_position]}}
         board[to_position] = board[from_position]
         board[from_position] = None
-    #all the other moves
+    #all other moves
     else:
         spirit_updates = {from_position:{to_position:board[from_position]}}
         board[to_position] = board[from_position]
-        board[from_position] = None
-        
+        board[from_position] = None        
 
     return(board,enpassantposition,castlesused,spirit_updates)
 
@@ -317,11 +346,10 @@ def update_spirits(Spirit_group,spirit_update_dict):
         for spirit in Spirit_group:
             if spirit.position == from_:
                 if to_ == None:
-                    Spirit_group.remove(spirit)
+                    spirit.taken()
                 else:
                     to_position = list(to_.keys())[0]
-                    spirit.position = to_position
-                    spirit.piecetype = to_[to_position] #getting the piece type str from the spirit_update_dict
+                    spirit.update(to_[to_position],to_position)#getting the piece type str from the spirit_update_dict
                 
                 break #no need to go through all other items once a match has been found.
                 
@@ -352,6 +380,8 @@ def main():
     
     (all_sprites_list,current_board,current_enpassant,current_turn,current_castle)  = setup_board(starting_board)
     pygame.display.update(all_sprites_list.draw(screen))
+    
+    # piece_highlighted = False #this is to indicate if a piece is currently highlighted or not
 
     
     while Rematch:
@@ -367,11 +397,41 @@ def main():
                 pygame.display.update(screen.blit(textsurface,(700,400))) #draw white to fill the last text with white
                 pygame.display.update(screen.blit(textsurface2,(700,440))) #draw white to fill the last text with white
                 
+                
                 mouse_pos = mouse_pos_to_square(pygame.mouse.get_pos())
-                possible_moves = get_possible_moves(mouse_pos,current_board,en_passant=current_enpassant,possible_castles=current_castle)[0]
+                
+                if mouse_pos in possible_moves:
+                    (current_board,current_enpassant,castles_used_string,spirit_updates_string) = move_piece(current_board,last_mouse_pos,mouse_pos)
+                    # print(current_board,current_enpassant,castles_used_string,spirit_updates_string)
+
+                    #getting which castles were used and removing them from possible castling options
+                    for character in castles_used_string:
+                        current_castle = current_castle.replace(character, '')
+                    
+                    all_sprites_list = update_spirits(all_sprites_list,spirit_updates_string)
+                    possible_moves=[]
+                    last_mouse_pos=None
+                    if current_turn == 'w':
+                        current_turn = 'b'
+                    else:
+                        current_turn = 'w'
+                    
+                    # for iii in all_sprites_list:
+                    #     print(iii.piecetype,iii.position)
+                    
+                elif current_board[mouse_pos] == None:
+                    possible_moves=[]
+                elif possible_moves==[] and (current_turn == 'w' and current_board[mouse_pos].isupper() == True or current_turn == 'b' and current_board[mouse_pos].isupper() == False):
+                    possible_moves = get_possible_moves(mouse_pos,current_board,en_passant=current_enpassant,possible_castles=current_castle)[0] #get the list of possible moves
+                    # piece_highlighted = True #get ready to move
+                    last_mouse_pos = mouse_pos #record mouse position
+
+                else:
+                    possible_moves=[]
+                    last_mouse_pos=None
 
                 draw_chess_board_on_screen(screen,WHITE,LIGHT,DARK,possible_moves) #Draw the board
-                pygame.display.update(all_sprites_list.draw(screen)) #draw all the pieces
+                all_sprites_list.draw(screen) #draw all the pieces
                 
                 textsurface = myfont.render('Mouse Position: {}'.format(mouse_pos), False, BLACK)
                 textsurface2 = myfont.render('Possible Moves: {}'.format(possible_moves), False, BLACK)
