@@ -7,13 +7,27 @@ from pygame.locals import *
 pieces_file = './Files/Pieces.png' #file with image of pieces
 SQW = 75 #Square width
 RANKS = {'a':0,'b':1,'c':2,'d':3,'e':4,'f':5,'g':6,'h':7}
-
-
 #FEN Notation: https://en.wikipedia.org/wiki/Forsyth%E2%80%93Edwards_Notation
 starting_board = 'r3k2r/pbp1q1pp/1pn1p1bn/3p1p2/3P1P2/1PN1PN2/PQPBB1PP/R3K2R w KQkq - 0 1'
 # Standard Game: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
 # Random Board: 'r2q1rk1/pp2ppbp/5np1/1Ppp2B1/3PP1b1/Q1P2N2/P4PPP/3RKB1R b K c6 0 13'
 # Castling Test: 'r3k2r/pbp1q1pp/1pn1p1bn/3p1p2/3P1P2/1PN1PN2/PQPBB1PP/R3K2R w KQkq - 0 1'
+
+#Sounds
+pygame.mixer.init()
+global sound_effect_start
+global sound_effect_move
+global sound_effect_castle
+global sound_effect_take
+global sound_effect_check
+global sound_effect_gameover
+
+sound_effect_start = pygame.mixer.Sound ('./Files/start.wav')
+sound_effect_move = pygame.mixer.Sound ('./Files/move.wav')
+sound_effect_castle = pygame.mixer.Sound ('./Files/castle.wav')
+sound_effect_take = pygame.mixer.Sound ('./Files/take.wav')
+sound_effect_check = pygame.mixer.Sound ('./Files/check.wav')
+sound_effect_gameover = pygame.mixer.Sound ('./Files/gameover.wav')
 
 def setup_board(fen_string):
     """
@@ -242,14 +256,15 @@ def move_piece(board,from_position,to_position):
                 enpassantposition = from_position + 8
             
             spirit_updates = {from_position:{to_position:board[from_position]}} #captures updates that needs to happen for spirits
-            
             board[to_position] = board[from_position]
             board[from_position] = None
+            sound_effect_move.play()
         elif abs(to_position - from_position) in [7,9]: #pawn taking another piece either directly or by en passant
             if board[to_position] != None:
                 spirit_updates = {to_position:None,from_position:{to_position:board[from_position]}} #captures updates that needs to happen for spirits
                 board[to_position] = board[from_position]
                 board[from_position] = None
+                
             else: # en passant
                 if to_position - from_position in [-7,9]:
                     spirit_updates = {from_position + 1: None,from_position:{to_position:board[from_position]}} #captures updates that needs to happen for spirits
@@ -260,10 +275,13 @@ def move_piece(board,from_position,to_position):
                 
                 board[to_position] = board[from_position]
                 board[from_position] = None
+            sound_effect_take.play()
+            
         else: # regular pawn poves
             spirit_updates = {from_position:{to_position:board[from_position]}}
             board[to_position] = board[from_position]
-            board[from_position] = None           
+            board[from_position] = None  
+            sound_effect_move.play()
 
         #promotion of a pawn to queen! for now only promotes to queen!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         if to_position <= 7: #if a white pawn gets to the 8th rank
@@ -288,32 +306,39 @@ def move_piece(board,from_position,to_position):
             board[60] = None
             board[61] = 'R'
             board[63] = None
+            sound_effect_castle.play()
         elif from_position == 60 and to_position == 58: #white king castles queen side
             spirit_updates = {60:{58:'K'},56:{59:'R'}}
             board[58] = 'K'
             board[60] = None
             board[59] = 'R'
             board[56] = None
+            sound_effect_castle.play()
         elif from_position == 4 and to_position == 6: #black king castles king side
             spirit_updates = {4:{6:'k'},7:{5:'r'}}
             board[6] = 'k'
             board[4] = None
             board[5] = 'r'
             board[7] = None
+            sound_effect_castle.play()
         elif from_position == 4 and to_position == 2: #white king castles queen side
             spirit_updates = {4:{2:'k'},0:{3:'r'}}
             board[2] = 'k'
             board[4] = None
             board[3] = 'R'
             board[0] = None
+            sound_effect_castle.play()
         elif board[to_position] != None: #indicating any king moves that takes a piece
             spirit_updates = {to_position: None,from_position:{to_position:board[from_position]}}
             board[to_position] = board[from_position]
-            board[from_position] = None            
+            board[from_position] = None
+            sound_effect_take.play()
         else:
             spirit_updates = {from_position:{to_position:board[from_position]}}
             board[to_position] = board[from_position]
             board[from_position] = None
+            sound_effect_move.play()
+    
     #handling rook moves since it affects castles
     elif board[from_position] in ['r','R']:
         if board[from_position] == 'R' and from_position == 63:
@@ -329,20 +354,24 @@ def move_piece(board,from_position,to_position):
             spirit_updates = {to_position: None,from_position:{to_position:board[from_position]}}
             board[to_position] = board[from_position]
             board[from_position] = None
+            sound_effect_take.play()
         else: #regular rook move
             spirit_updates = {from_position:{to_position:board[from_position]}}
             board[to_position] = board[from_position]
-            board[from_position] = None            
+            board[from_position] = None
+            sound_effect_move.play()
     #taking a piece
     elif board[to_position] != None:
         spirit_updates = {to_position: None,from_position:{to_position:board[from_position]}}
         board[to_position] = board[from_position]
         board[from_position] = None
+        sound_effect_take.play()
     #all other moves
     else:
         spirit_updates = {from_position:{to_position:board[from_position]}}
         board[to_position] = board[from_position]
-        board[from_position] = None        
+        board[from_position] = None
+        sound_effect_move.play()
 
     return(board,enpassantposition,castlesused,spirit_updates)
 
@@ -364,6 +393,7 @@ def update_spirits(Spirit_group,spirit_update_dict):
 
 
 def main():
+    
     WHITE = (255,255,255)
     BLACK = (0,0,0)
     DARK = (119,149,86)
@@ -389,6 +419,7 @@ def main():
     
     # piece_highlighted = False #this is to indicate if a piece is currently highlighted or not
 
+    sound_effect_start.play()
     
     while Rematch:
         pygame.display.flip()
@@ -443,6 +474,7 @@ def main():
                 pygame.display.update(screen.blit(textsurface2,(700,440)))
                 
    
+
     #Exit pygame incase Escape is pressed or pragram stopped
     pygame.quit()
 
