@@ -88,7 +88,9 @@ def get_possible_moves(position,board,en_passant=None,possible_castles=None):
                         possible_moves.append(en_passant)
         #Moving ahead
         for i in range(0,2): #indicates each of moves/control for each pawn
-
+            #can't move two squares if at the rank before last rank
+            if i==1 and (board[position]=='p' and y==6 or board[position]=='P' and y==1):
+                break
             if board[(y + pawn_moves[board[position]]['move'][i][1])*8 + x + pawn_moves[board[position]]['move'][i][0]]== None and (i==0 or i==1 and (board[position]=='p' and y==1 or board[position]=='P' and y==6)):
                 possible_moves.append((y + pawn_moves[board[position]]['move'][i][1])*8 + x + pawn_moves[board[position]]['move'][i][0])
             else:
@@ -184,6 +186,13 @@ class Piece(pygame.sprite.Sprite):
         """ updatin piece location and type, basically same as the init method"""
         self.piecetype = piecetype
         self.position = position
+        SPRITE = pygame.transform.smoothscale(pygame.image.load(pieces_file), (int(SQW*6), int(SQW*2)))
+        PIECES = ['K','Q','B','N','R','P','k','q','b','n','r','p']
+        for i in range(2):
+            for j in range(6):
+                if piecetype == PIECES[j + i*6]:
+                    SURF = pygame.Surface.subsurface(SPRITE, (j*SQW, i*SQW, SQW, SQW))
+                    self.image = SURF
         self.rect = self.image.get_rect()
         self.rect.x = 100 + (position % 8) * SQW
         self.rect.y = 100 + (position // 8) * SQW
@@ -236,17 +245,6 @@ def move_piece(board,from_position,to_position):
             
             board[to_position] = board[from_position]
             board[from_position] = None
-            
-        #promotion of a pawn to queen! for now only promotes to queen!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        elif to_position <= 7: #if a white pawn gets to the 8th rank
-            spirit_updates = {from_position:{to_position:'Q'}} #captures updates that needs to happen for spirits
-            board[to_position] = 'Q'
-            board[from_position] = None
-
-        elif to_position >= 56: #if a black pawn gets to the 1st rank
-            spirit_updates = {from_position:{to_position:'q'}} #captures updates that needs to happen for spirits
-            board[to_position] = 'q'
-            board[from_position] = None
         elif abs(to_position - from_position) in [7,9]: #pawn taking another piece either directly or by en passant
             if board[to_position] != None:
                 spirit_updates = {to_position:None,from_position:{to_position:board[from_position]}} #captures updates that needs to happen for spirits
@@ -266,7 +264,16 @@ def move_piece(board,from_position,to_position):
             spirit_updates = {from_position:{to_position:board[from_position]}}
             board[to_position] = board[from_position]
             board[from_position] = None           
-                    
+
+        #promotion of a pawn to queen! for now only promotes to queen!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        if to_position <= 7: #if a white pawn gets to the 8th rank
+            spirit_updates[from_position] = {to_position:'Q'} #captures updates that needs to happen for spirits
+            board[to_position] = 'Q'
+            board[from_position] = None
+        elif to_position >= 56: #if a black pawn gets to the 1st rank
+            spirit_updates[from_position]= {to_position:'q'} #captures updates that needs to happen for spirits
+            board[to_position] = 'q'
+            board[from_position] = None
     #handling king moves and castles
     elif board[from_position] in ['k','K']:
         #both castle options are exhausted at this point since king is moving
@@ -350,7 +357,6 @@ def update_spirits(Spirit_group,spirit_update_dict):
                 else:
                     to_position = list(to_.keys())[0]
                     spirit.update(to_[to_position],to_position)#getting the piece type str from the spirit_update_dict
-                
                 break #no need to go through all other items once a match has been found.
                 
     return(Spirit_group)
@@ -402,7 +408,6 @@ def main():
                 
                 if mouse_pos in possible_moves:
                     (current_board,current_enpassant,castles_used_string,spirit_updates_string) = move_piece(current_board,last_mouse_pos,mouse_pos)
-                    # print(current_board,current_enpassant,castles_used_string,spirit_updates_string)
 
                     #getting which castles were used and removing them from possible castling options
                     for character in castles_used_string:
@@ -416,9 +421,8 @@ def main():
                     else:
                         current_turn = 'w'
                     
-                    # for iii in all_sprites_list:
-                    #     print(iii.piecetype,iii.position)
-                    
+                elif mouse_pos == []:
+                    possible_moves=[]
                 elif current_board[mouse_pos] == None:
                     possible_moves=[]
                 elif possible_moves==[] and (current_turn == 'w' and current_board[mouse_pos].isupper() == True or current_turn == 'b' and current_board[mouse_pos].isupper() == False):
