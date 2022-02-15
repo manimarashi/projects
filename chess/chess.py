@@ -7,8 +7,9 @@ from pygame.locals import *
 pieces_file = './Files/Pieces.png' #file with image of pieces
 SQW = 75 #Square width
 RANKS = {'a':0,'b':1,'c':2,'d':3,'e':4,'f':5,'g':6,'h':7}
+SCORES = {'K':40000,'k':-40000,'Q':900,'q':-900,'R':500,'r':-500,'B':300,'b':-300,'N':300,'n':-300,'P':100,'p':-100}
 #FEN Notation: https://en.wikipedia.org/wiki/Forsyth%E2%80%93Edwards_Notation
-starting_board = 'r3k2r/pbp1q1pp/1pn1p1bn/3p1p2/3P1P2/1PN1PN2/PQPBB1PP/R3K2R w KQkq - 0 1'
+starting_board = 'r3k2r/pbp1q1pp/1pn1pb1n/3p1p2/3P1P2/1PN1PN2/PQPBB1PP/R3K2R w KQkq - 0 1'
 # Standard Game: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
 # Random Board: 'r2q1rk1/pp2ppbp/5np1/1Ppp2B1/3PP1b1/Q1P2N2/P4PPP/3RKB1R b K c6 0 13'
 # Castling Test: 'r3k2r/pbp1q1pp/1pn1p1bn/3p1p2/3P1P2/1PN1PN2/PQPBB1PP/R3K2R w KQkq - 0 1'
@@ -153,13 +154,14 @@ def get_possible_moves(position,board,en_passant=None,possible_castles=None):
     elif board[position] in ['k','K']:
         for i in queen_moves:
             if (x + i[0] >= 0 and x + i[0] <= 7 and y + i[1] >= 0 and y + i[1] <= 7) and (board[(y + i[1])*8 + x + i[0]]== None):
+                print(1)
                 possible_moves.append((y + i[1])*8 + x+i[0])
                 controlled_squares.append((y + i[1])*8 + x+i[0])
             elif (x + i[0] >= 0 and x + i[0] <= 7 and y + i[1] >= 0 and y + i[1] <= 7) and (board[position].isupper() != board[(y + i[1])*8 + x + i[0]].isupper()):
                 possible_moves.append((y + i[1])*8 + x+i[0])   
                 controlled_squares.append((y + i[1])*8 + x+i[0])
         #castling the king
-        if possible_castles and possible_castles != '-':
+        if possible_castles and possible_castles != '-' and possible_castles != '':
             if possible_castles.find('K') >= 0 and board[position]=='K' and board[61]==None and board[62]==None and set({60,61,62}).isdisjoint(controlled_area(board,'b')):
                 possible_moves.append(62)
             if possible_castles.find('Q') >= 0 and board[position]=='K' and board[59]==None and board[58]==None and set({58,59,60}).isdisjoint(controlled_area(board,'b')):
@@ -321,11 +323,11 @@ def move_piece(board,from_position,to_position):
             board[5] = 'r'
             board[7] = None
             sound_effect_castle.play()
-        elif from_position == 4 and to_position == 2: #white king castles queen side
+        elif from_position == 4 and to_position == 2: #black king castles queen side
             spirit_updates = {4:{2:'k'},0:{3:'r'}}
             board[2] = 'k'
             board[4] = None
-            board[3] = 'R'
+            board[3] = 'r'
             board[0] = None
             sound_effect_castle.play()
         elif board[to_position] != None: #indicating any king moves that takes a piece
@@ -473,8 +475,6 @@ def main():
                 pygame.display.update(screen.blit(textsurface,(700,400)))
                 pygame.display.update(screen.blit(textsurface2,(700,440)))
                 
-   
-
     #Exit pygame incase Escape is pressed or pragram stopped
     pygame.quit()
 
