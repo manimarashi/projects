@@ -154,7 +154,6 @@ def get_possible_moves(position,board,en_passant=None,possible_castles=None):
     elif board[position] in ['k','K']:
         for i in queen_moves:
             if (x + i[0] >= 0 and x + i[0] <= 7 and y + i[1] >= 0 and y + i[1] <= 7) and (board[(y + i[1])*8 + x + i[0]]== None):
-                print(1)
                 possible_moves.append((y + i[1])*8 + x+i[0])
                 controlled_squares.append((y + i[1])*8 + x+i[0])
             elif (x + i[0] >= 0 and x + i[0] <= 7 and y + i[1] >= 0 and y + i[1] <= 7) and (board[position].isupper() != board[(y + i[1])*8 + x + i[0]].isupper()):
