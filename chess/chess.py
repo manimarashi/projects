@@ -14,21 +14,28 @@ starting_board = 'r3k2r/pbp1q1pp/1pn1pb1n/3p1p2/3P1P2/1PN1PN2/PQPBB1PP/R3K2R w K
 # Random Board: 'r2q1rk1/pp2ppbp/5np1/1Ppp2B1/3PP1b1/Q1P2N2/P4PPP/3RKB1R b K c6 0 13'
 # Castling Test: 'r3k2r/pbp1q1pp/1pn1pb1n/3p1p2/3P1P2/1PN1PN2/PQPBB1PP/R3K2R w KQkq - 0 1'
 
-#Sounds
-pygame.mixer.init()
-global sound_effect_start
-global sound_effect_move
-global sound_effect_castle
-global sound_effect_take
-global sound_effect_check
-global sound_effect_gameover
+def play_sound(sound):
+    pygame.mixer.init()
+    sound_effect_start = pygame.mixer.Sound ('./Files/start.wav')
+    sound_effect_move = pygame.mixer.Sound ('./Files/move.wav')
+    sound_effect_castle = pygame.mixer.Sound ('./Files/castle.wav')
+    sound_effect_take = pygame.mixer.Sound ('./Files/take.wav')
+    sound_effect_check = pygame.mixer.Sound ('./Files/check.wav')
+    sound_effect_gameover = pygame.mixer.Sound ('./Files/gameover.wav')
 
-sound_effect_start = pygame.mixer.Sound ('./Files/start.wav')
-sound_effect_move = pygame.mixer.Sound ('./Files/move.wav')
-sound_effect_castle = pygame.mixer.Sound ('./Files/castle.wav')
-sound_effect_take = pygame.mixer.Sound ('./Files/take.wav')
-sound_effect_check = pygame.mixer.Sound ('./Files/check.wav')
-sound_effect_gameover = pygame.mixer.Sound ('./Files/gameover.wav')
+    if sound == 'start':
+        sound_effect_start.play()
+    elif sound == 'move':
+        sound_effect_move.play()
+    elif sound == 'castle':
+        sound_effect_castle.play()
+    elif sound == 'take':
+        sound_effect_take.play()
+    elif sound == 'check':
+        sound_effect_check.play()
+    elif sound == 'gameover':
+        sound_effect_gameover.play()
+
 
 def setup_board(fen_string):
     """
@@ -247,6 +254,7 @@ def move_piece(board,from_position,to_position):
     enpassantposition = [] #gets populated when a pawn jumps two squares
     spirit_updates = {}
     castlesused = ''
+    sound_effect = ''
     #moving pawns
     if board[from_position] in ['p','P']:
         #if a pawn jumps two pieces
@@ -259,7 +267,7 @@ def move_piece(board,from_position,to_position):
             spirit_updates = {from_position:{to_position:board[from_position]}} #captures updates that needs to happen for spirits
             board[to_position] = board[from_position]
             board[from_position] = None
-            sound_effect_move.play()
+            sound_effect = 'move'
         elif abs(to_position - from_position) in [7,9]: #pawn taking another piece either directly or by en passant
             if board[to_position] != None:
                 spirit_updates = {to_position:None,from_position:{to_position:board[from_position]}} #captures updates that needs to happen for spirits
@@ -276,13 +284,13 @@ def move_piece(board,from_position,to_position):
                 
                 board[to_position] = board[from_position]
                 board[from_position] = None
-            sound_effect_take.play()
+            sound_effect = 'take'
             
         else: # regular pawn poves
             spirit_updates = {from_position:{to_position:board[from_position]}}
             board[to_position] = board[from_position]
             board[from_position] = None  
-            sound_effect_move.play()
+            sound_effect = 'move'
 
         #promotion of a pawn to queen! for now only promotes to queen!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         if to_position <= 7: #if a white pawn gets to the 8th rank
@@ -307,38 +315,38 @@ def move_piece(board,from_position,to_position):
             board[60] = None
             board[61] = 'R'
             board[63] = None
-            sound_effect_castle.play()
+            sound_effect ='castle'
         elif from_position == 60 and to_position == 58: #white king castles queen side
             spirit_updates = {60:{58:'K'},56:{59:'R'}}
             board[58] = 'K'
             board[60] = None
             board[59] = 'R'
             board[56] = None
-            sound_effect_castle.play()
+            sound_effect ='castle'
         elif from_position == 4 and to_position == 6: #black king castles king side
             spirit_updates = {4:{6:'k'},7:{5:'r'}}
             board[6] = 'k'
             board[4] = None
             board[5] = 'r'
             board[7] = None
-            sound_effect_castle.play()
+            sound_effect ='castle'
         elif from_position == 4 and to_position == 2: #black king castles queen side
             spirit_updates = {4:{2:'k'},0:{3:'r'}}
             board[2] = 'k'
             board[4] = None
             board[3] = 'r'
             board[0] = None
-            sound_effect_castle.play()
+            sound_effect ='castle'
         elif board[to_position] != None: #indicating any king moves that takes a piece
             spirit_updates = {to_position: None,from_position:{to_position:board[from_position]}}
             board[to_position] = board[from_position]
             board[from_position] = None
-            sound_effect_take.play()
+            sound_effect ='castle'
         else:
             spirit_updates = {from_position:{to_position:board[from_position]}}
             board[to_position] = board[from_position]
             board[from_position] = None
-            sound_effect_move.play()
+            sound_effect ='castle'
     
     #handling rook moves since it affects castles
     elif board[from_position] in ['r','R']:
@@ -355,26 +363,26 @@ def move_piece(board,from_position,to_position):
             spirit_updates = {to_position: None,from_position:{to_position:board[from_position]}}
             board[to_position] = board[from_position]
             board[from_position] = None
-            sound_effect_take.play()
+            sound_effect ='take'
         else: #regular rook move
             spirit_updates = {from_position:{to_position:board[from_position]}}
             board[to_position] = board[from_position]
             board[from_position] = None
-            sound_effect_move.play()
+            sound_effect ='move'
     #taking a piece
     elif board[to_position] != None:
         spirit_updates = {to_position: None,from_position:{to_position:board[from_position]}}
         board[to_position] = board[from_position]
         board[from_position] = None
-        sound_effect_take.play()
+        sound_effect ='take'
     #all other moves
     else:
         spirit_updates = {from_position:{to_position:board[from_position]}}
         board[to_position] = board[from_position]
         board[from_position] = None
-        sound_effect_move.play()
+        sound_effect ='move'
 
-    return(board,enpassantposition,castlesused,spirit_updates)
+    return(board,enpassantposition,castlesused,spirit_updates,sound_effect)
 
 
 
@@ -394,6 +402,10 @@ def update_spirits(Spirit_group,spirit_update_dict):
 def evaluate_board(baord_str):
     value = sum(list(map(SCORES.get, baord_str)))
     return(value)
+
+
+
+
 
 def main():
     
@@ -422,7 +434,7 @@ def main():
     
     # piece_highlighted = False #this is to indicate if a piece is currently highlighted or not
 
-    sound_effect_start.play()
+    play_sound('start')
     
     while Rematch:
         pygame.display.flip()
@@ -441,7 +453,7 @@ def main():
                 mouse_pos = mouse_pos_to_square(pygame.mouse.get_pos())
                 
                 if mouse_pos in possible_moves:
-                    (current_board,current_enpassant,castles_used_string,spirit_updates_string) = move_piece(current_board,last_mouse_pos,mouse_pos)
+                    (current_board,current_enpassant,castles_used_string,spirit_updates_string,sound_effect) = move_piece(current_board,last_mouse_pos,mouse_pos)
 
                     #getting which castles were used and removing them from possible castling options
                     for character in castles_used_string:
@@ -454,6 +466,8 @@ def main():
                         current_turn = 'b'
                     else:
                         current_turn = 'w'
+                    
+                    play_sound(sound_effect)
                     
                 elif mouse_pos == []:
                     possible_moves=[]
