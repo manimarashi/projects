@@ -250,7 +250,7 @@ def draw_chess_board_on_screen(game_screen,bg_color,white_square_color,dark_squa
             elif (i+j) % 2 == 0:
                 pygame.draw.rect(game_screen,white_square_color,(100+SQW*i,100+SQW*j,SQW,SQW))
 
-def move_piece(board,from_position,to_position):
+def move_piece(board,from_position,to_position,possible_castles):
     enpassantposition = [] #gets populated when a pawn jumps two squares
     spirit_updates = {}
     castlesused = ''
@@ -382,7 +382,12 @@ def move_piece(board,from_position,to_position):
         board[from_position] = None
         sound_effect ='move'
 
-    return(board,enpassantposition,castlesused,spirit_updates,sound_effect)
+        
+    #getting which castles were used and removing them from possible castling options
+    for character in castlesused:
+        possible_castles = possible_castles.replace(character, '')
+        
+    return(board,enpassantposition,spirit_updates,sound_effect,possible_castles)
 
 
 
@@ -453,11 +458,7 @@ def main():
                 mouse_pos = mouse_pos_to_square(pygame.mouse.get_pos())
                 
                 if mouse_pos in possible_moves:
-                    (current_board,current_enpassant,castles_used_string,spirit_updates_string,sound_effect) = move_piece(current_board,last_mouse_pos,mouse_pos)
-
-                    #getting which castles were used and removing them from possible castling options
-                    for character in castles_used_string:
-                        current_castle = current_castle.replace(character, '')
+                    (current_board,current_enpassant,spirit_updates_string,sound_effect,current_castle) = move_piece(current_board,last_mouse_pos,mouse_pos,current_castle)
                     
                     all_sprites_list = update_spirits(all_sprites_list,spirit_updates_string)
                     possible_moves=[]
